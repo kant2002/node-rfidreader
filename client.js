@@ -12,13 +12,13 @@ function failOnError(err) {
 }
 
 client.on("error", function (err) {
-  console.log("server error:\n" + err.stack);
+  console.log("Server error:\n" + err.stack);
   client.close();
 });
 
 client.on("listening", function () {
 	var address = client.address();
-  	console.log("server listening " + address.address + ":" + address.port);
+  	console.log("Server listening " + address.address + ":" + address.port);
 	console.log("Start listening.")
     client.setBroadcast(true);
 	var setSound = rfidReader.setSoundCommand(0, rfidReader.soundType.shortBeepOnce);
