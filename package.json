@@ -1,0 +1,25 @@
+{
+  "name": "rfidreader",
+  "version": "0.0.1",
+  "description": "RFID reader library for communication with readers uing Ethernet",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kant2002/node-rfidreader.git"
+  },
+  "keywords": [
+    "rfid",
+    "ethernet"
+  ],
+  "author": "Andrey Kurdyumov <kant2002@gmail.com>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/kant2002/node-rfidreader/issues"
+  },
+  "homepage": "https://github.com/kant2002/node-rfidreader#readme",
+  "dependencies": {
+  }
+}
