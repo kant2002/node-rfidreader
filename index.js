@@ -3,10 +3,6 @@ var dgram = require('dgram');
 var client = dgram.createSocket("udp4");
 var broadcastAddress = "255.255.255.255";
 var deviceBroadcastPort = 39169;
-client.on("error", function (err) {
-  console.log("server error:\n" + err.stack);
-  client.close();
-});
 
 var commands = {
 	deviceDescovery: 0xA5,
@@ -52,6 +48,96 @@ function failOnError(err) {
 	}	
 }
 
+function readIpAddress(msg, offset, separator) {
+	separator = separator || ".";
+	return msg[offset].toString() + separator
+		 + msg[offset + 1].toString() + separator
+		 + msg[offset + 2].toString() + separator
+		 + msg[offset + 3].toString();
+}
+
+function readDeviceNumber(msg, offset, separator) {
+	separator = separator || "-";
+	return msg[offset].toString() + separator
+		 + msg[offset + 1].toString() + separator
+		 + msg[offset + 2].toString() + separator
+		 + msg[offset + 3].toString();
+}
+
+function decodeCardMessage(msg) {
+	var readerIpAddressString = readIpAddress(msg, 1);
+	var jihaostr = msg.readUInt16LE(5);
+	var packetNumber = msg.readUInt16LE(7);
+	
+	var cardNumber = msg.readUInt32LE(9);
+	var cardNumberString = "000000000" + cardNumber;
+	cardNumberString = cardNumberString.substr(cardNumberString.length - 10, 10);
+
+	return {
+		readerIpAddress: readerIpAddressString,
+		jihao: jihaostr,
+		packetNumber: packetNumber,
+		cardNumber: cardNumberString
+	};
+}
+
+function createReply(msg) {
+	var reply = new Buffer(9);
+	reply[0] = commands.reply;
+	for (var i = 1; i < 9; i++)
+	{
+		reply[i] = msg[i];
+	}
+	
+	return reply;
+}
+
+function decodeRegisterDeviceMessage(msg) {
+	
+	var readerIpAddressString = readIpAddress(msg, 1);
+	var readerIpAddressMaskString = readIpAddress(msg, 5);
+	var readerIpAddressGatewayString = readIpAddress(msg, 9);
+	var jihaostr = msg.readUInt16LE(13);
+	var deviceNumber = readDeviceNumber(msg, 15, "-");
+
+	return {
+		readerIpAddress: readerIpAddressString,
+		readerIpAddressMask: readerIpAddressMaskString,
+		readerIpAddressGateway: readerIpAddressGatewayString,
+		jihao: jihaostr,
+		deviceNumber: deviceNumber,
+	}
+}
+
+function processBindingData(msg) {
+	var reply = createReply(msg);	
+	var messageData = decodeCardMessage(msg);
+	console.log("Reader IP string", messageData.readerIpAddress);
+	console.log("jihao", messageData.jihao);
+	console.log("Packet No:", messageData.packetNumber);
+	console.log("Card Number", messageData.cardNumber);
+
+	console.log("Sending reply", reply);
+	//client.setBroadcast(false);
+	client.send(reply, 0, reply.length, deviceBroadcastPort, messageData.readerIpAddress, function(err, bytes) {
+		//client.setBroadcast(true);
+	});
+}
+
+function registerDevice(msg) {
+	var messageData = decodeRegisterDeviceMessage(msg);
+	console.log("Reader IP address:", messageData.readerIpAddress);
+	console.log("Reader IP mask:", messageData.readerIpAddressMask);
+	console.log("Reader IP gateway:", messageData.readerIpAddressGateway);
+	console.log("jihao", messageData.jihaostr);
+	console.log("Device No:", messageData.deviceNumber);
+}
+
+client.on("error", function (err) {
+  console.log("server error:\n" + err.stack);
+  client.close();
+});
+
 client.on("listening", function () {
 	var address = client.address();
   	console.log("server listening " + address.address + ":" + address.port);
@@ -73,62 +159,6 @@ client.on("listening", function () {
 		}		
 	});
 });
-
-function readIpAddress(msg, offset, separator) {
-	separator = separator || ".";
-	return msg[offset].toString() + separator
-		 + msg[offset + 1].toString() + separator
-		 + msg[offset + 2].toString() + separator
-		 + msg[offset + 3].toString();
-}
-
-function readDeviceNumber(msg, offset, separator) {
-	separator = separator || "-";
-	return msg[offset].toString() + separator
-		 + msg[offset + 1].toString() + separator
-		 + msg[offset + 2].toString() + separator
-		 + msg[offset + 3].toString();
-}
-
-function processBindingData(msg) {
-	var reply = new Buffer(9);
-	reply[0] = commands.reply;
-	for (var i = 1; i < 9; i++)
-	{
-		reply[i] = msg[i];
-	}
-	
-	var readerIpAddressString = readIpAddress(msg, 1);
-	console.log("Reader IP string", readerIpAddressString);
-
-	console.log("Send reply", reply);
-	//client.setBroadcast(false);
-	client.send(reply, 0, reply.length, deviceBroadcastPort, readerIpAddressString, function(err, bytes) {
-		client.setBroadcast(true);
-		var jihaostr = msg.readUInt16LE(5);
-		var packetNumber = msg.readUInt16LE(7);
-		console.log("jihao", jihaostr);
-		console.log("Packet No:", packetNumber);
-		
-		var cardNumber = msg.readUInt32LE(9);
-		var cardNumberString = "000000000" + cardNumber;
-		cardNumberString = cardNumberString.substr(cardNumberString.length - 10, 10);
-		console.log("Card Number", cardNumberString);
-	});
-}
-
-function registerDevice(msg) {
-	var readerIpAddressString = readIpAddress(msg, 1);
-	var readerIpAddressMaskString = readIpAddress(msg, 5);
-	var readerIpAddressGatewayString = readIpAddress(msg, 9);
-	console.log("Reader IP address:", readerIpAddressString);
-	console.log("Reader IP mask:", readerIpAddressMaskString);
-	console.log("Reader IP gateway:", readerIpAddressGatewayString);
-	var jihaostr = msg.readUInt16LE(13);
-	var deviceNumber = readDeviceNumber(msg, 15, "-");
-	console.log("jihao", jihaostr);
-	console.log("Device No:", deviceNumber);
-}
 
 client.bind({
 	port: deviceBroadcastPort,
