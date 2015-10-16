@@ -58,9 +58,9 @@ client.on("listening", function () {
 	console.log("Start listening.")
     client.setBroadcast(true);
 	var setSound = setSoundCommand(0, soundType.shortBeepOnce);
-	client.send(setSound, 0, setSound.length, deviceBroadcastPort, "255.255.255.255", failOnError);
+	client.send(setSound, 0, setSound.length, deviceBroadcastPort, broadcastAddress, failOnError);
 	var message = createDiscoveryCommand();
-	client.send(message, 0, message.length, deviceBroadcastPort, "255.255.255.255", failOnError);	
+	client.send(message, 0, message.length, deviceBroadcastPort, broadcastAddress, failOnError);	
 	client.on("message", function (msg, rinfo) {
 		var magicByte = msg[0];
 		if (magicByte === commands.dataReceived1 || magicByte == commands.dataReceived2)
