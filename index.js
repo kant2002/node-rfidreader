@@ -10,7 +10,9 @@ var commands = {
 	dataReceived1: 0xC1,
 	dataReceived2: 0xD1,
 	reply: 0x69,
-	deviceDiscovery: 0xF1
+	deviceDiscovery: 0xF1,
+	writeCardSuspected: 0x5A,
+	updateReader: 0xF0,
 }
 
 var soundType = {
@@ -42,10 +44,34 @@ function setSoundCommand(param1, param2) {
 	return command;
 }
 
-function failOnError(err) {
-	if (err) {
-		throw err;
-	}	
+function updateReaderCommand(serviceIpAddress, serviceSubnetMask, serviceRemoteId, deviceNumber, devicSerial, beepOnCard) {
+	var command = new Buffer(20);
+	command[0] = commands.updateReader;
+	writeIpAddress(serviceIpAddress, command, 1);
+	writeIpAddress(serviceSubnetMask, command, 5);
+	writeIpAddress(serviceRemoteId, command, 9);
+	command.writeUInt16LE(deviceNumber, 13);
+	writeDeviceSerial(devicSerial, command, 15);
+	command[19] = beepOnCard ? 1 : 0;
+	return command;
+}
+
+function writeIpAddress(ipAddress, msg, offset, separator) {
+	separator = separator || ".";
+	var data = ipAddress.split(separator);
+	msg[offset] = parseInt(data[0]);
+	msg[offset + 1] = parseInt(data[1]);
+	msg[offset + 2] = parseInt(data[2]);
+	msg[offset + 3] = parseInt(data[3]);
+}
+
+function writeDeviceSerial(ipAddress, msg, offset, separator) {
+	separator = separator || "-";
+	var data = ipAddress.split(separator);
+	msg[offset] = parseInt(data[0]);
+	msg[offset + 1] = parseInt(data[1]);
+	msg[offset + 2] = parseInt(data[2]);
+	msg[offset + 3] = parseInt(data[3]);
 }
 
 function readIpAddress(msg, offset, separator) {
@@ -56,7 +82,7 @@ function readIpAddress(msg, offset, separator) {
 		 + msg[offset + 3].toString();
 }
 
-function readDeviceNumber(msg, offset, separator) {
+function readDeviceSerial(msg, offset, separator) {
 	separator = separator || "-";
 	return msg[offset].toString() + separator
 		 + msg[offset + 1].toString() + separator
@@ -66,7 +92,7 @@ function readDeviceNumber(msg, offset, separator) {
 
 function decodeCardMessage(msg) {
 	var readerIpAddressString = readIpAddress(msg, 1);
-	var jihaostr = msg.readUInt16LE(5);
+	var deviceNumber = msg.readUInt16LE(5);
 	var packetNumber = msg.readUInt16LE(7);
 	
 	var cardNumber = msg.readUInt32LE(9);
@@ -75,7 +101,7 @@ function decodeCardMessage(msg) {
 
 	return {
 		readerIpAddress: readerIpAddressString,
-		jihao: jihaostr,
+		deviceNumber: deviceNumber,
 		packetNumber: packetNumber,
 		cardNumber: cardNumberString
 	};
@@ -97,15 +123,15 @@ function decodeRegisterDeviceMessage(msg) {
 	var readerIpAddressString = readIpAddress(msg, 1);
 	var readerIpAddressMaskString = readIpAddress(msg, 5);
 	var readerIpAddressGatewayString = readIpAddress(msg, 9);
-	var jihaostr = msg.readUInt16LE(13);
-	var deviceNumber = readDeviceNumber(msg, 15, "-");
+	var deviceNumber = msg.readUInt16LE(13);
+	var deviceSerial = readDeviceSerial(msg, 15, "-");
 
 	return {
 		readerIpAddress: readerIpAddressString,
 		readerIpAddressMask: readerIpAddressMaskString,
 		readerIpAddressGateway: readerIpAddressGatewayString,
-		jihao: jihaostr,
 		deviceNumber: deviceNumber,
+		deviceSerial: deviceSerial,
 	}
 }
 
@@ -113,7 +139,7 @@ function processBindingData(msg) {
 	var reply = createReply(msg);	
 	var messageData = decodeCardMessage(msg);
 	console.log("Reader IP string", messageData.readerIpAddress);
-	console.log("jihao", messageData.jihao);
+	console.log("Device Number", messageData.deviceNumber);
 	console.log("Packet No:", messageData.packetNumber);
 	console.log("Card Number", messageData.cardNumber);
 
@@ -129,38 +155,15 @@ function registerDevice(msg) {
 	console.log("Reader IP address:", messageData.readerIpAddress);
 	console.log("Reader IP mask:", messageData.readerIpAddressMask);
 	console.log("Reader IP gateway:", messageData.readerIpAddressGateway);
-	console.log("jihao", messageData.jihaostr);
-	console.log("Device No:", messageData.deviceNumber);
+	console.log("Device Number", messageData.deviceNumber);
+	console.log("Device Serial:", messageData.deviceSerial);
 }
 
-client.on("error", function (err) {
-  console.log("server error:\n" + err.stack);
-  client.close();
-});
-
-client.on("listening", function () {
-	var address = client.address();
-  	console.log("server listening " + address.address + ":" + address.port);
-	console.log("Start listening.")
-    client.setBroadcast(true);
-	var setSound = setSoundCommand(0, soundType.shortBeepOnce);
-	client.send(setSound, 0, setSound.length, deviceBroadcastPort, broadcastAddress, failOnError);
-	var message = createDiscoveryCommand();
-	client.send(message, 0, message.length, deviceBroadcastPort, broadcastAddress, failOnError);	
-	client.on("message", function (msg, rinfo) {
-		var magicByte = msg[0];
-		if (magicByte === commands.dataReceived1 || magicByte == commands.dataReceived2)
-		{
-			processBindingData(msg);
-		} else if (magicByte == commands.deviceDiscovery) {
-			registerDevice(msg);
-		} else {
-			console.log("Server got: " + JSON.stringify(msg.toJSON()) + " from " + rinfo.address + ":" + rinfo.port);
-		}		
-	});
-});
-
-client.bind({
-	port: deviceBroadcastPort,
-	address: "169.254.167.154"
-});
+module.exports = {
+	commands: commands,
+	createDiscoveryCommand: createDiscoveryCommand,
+	processBindingData: processBindingData,
+	registerDevice: registerDevice,
+	soundType: soundType,
+	setSoundCommand: setSoundCommand,
+};
