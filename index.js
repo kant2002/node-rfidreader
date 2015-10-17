@@ -161,9 +161,11 @@ function registerDevice(msg) {
 
 module.exports = {
 	commands: commands,
+	createReply: createReply,
 	createDiscoveryCommand: createDiscoveryCommand,
 	processBindingData: processBindingData,
 	registerDevice: registerDevice,
 	soundType: soundType,
 	setSoundCommand: setSoundCommand,
+	updateReaderCommand: updateReaderCommand,
 };
