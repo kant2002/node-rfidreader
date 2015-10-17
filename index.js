@@ -141,6 +141,7 @@ module.exports = {
 	createReply: createReply,
 	createDiscoveryCommand: createDiscoveryCommand,
 	soundType: soundType,
+	decodeRegisterDeviceMessage: decodeRegisterDeviceMessage,
 	setSoundCommand: setSoundCommand,
 	updateReaderCommand: updateReaderCommand,
 };
