@@ -142,6 +142,7 @@ module.exports = {
 	createDiscoveryCommand: createDiscoveryCommand,
 	soundType: soundType,
 	decodeRegisterDeviceMessage: decodeRegisterDeviceMessage,
+    decodeCardMessage: decodeCardMessage,
 	setSoundCommand: setSoundCommand,
 	updateReaderCommand: updateReaderCommand,
 };
