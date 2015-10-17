@@ -1,7 +1,7 @@
 /* global Buffer */
 var dgram = require('dgram');
 var client = dgram.createSocket("udp4");
-var rfidReader = require("./index.js");
+var rfidReader = require("../index.js");
 var broadcastAddress = "255.255.255.255";
 var deviceBroadcastPort = 39169;
 
