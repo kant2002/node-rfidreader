@@ -1,7 +1,7 @@
 /* global Buffer */
 var dgram = require('dgram');
 var client = dgram.createSocket("udp4");
-var rfidReader = require("./index.js");
+var rfidReader = require("../index.js");
 var broadcastAddress = "255.255.255.255";
 var deviceBroadcastPort = 39169;
 
@@ -9,6 +9,31 @@ function failOnError(err) {
 	if (err) {
 		throw err;
 	}	
+}
+
+function processBindingData(msg) {
+	var reply = rfidReader.createReply(msg);	
+	var messageData = rfidReader.decodeCardMessage(msg);
+	console.log("Reader IP string", messageData.readerIpAddress);
+	console.log("Device Number", messageData.deviceNumber);
+	console.log("Packet No:", messageData.packetNumber);
+	console.log("Card Number", messageData.cardNumber);
+
+	console.log("Sending reply", reply);
+	//client.setBroadcast(false);
+	client.send(reply, 0, reply.length, deviceBroadcastPort, messageData.readerIpAddress, function(err, bytes) {
+		//client.setBroadcast(true);
+	});
+}
+
+function registerDevice(msg) {
+	var messageData = rfidReader.decodeRegisterDeviceMessage(msg);
+	console.log("Device discovered");
+	console.log("Reader IP address:", messageData.readerIpAddress);
+	console.log("Reader IP mask:", messageData.readerIpAddressMask);
+	console.log("Reader IP gateway:", messageData.readerIpAddressGateway);
+	console.log("Device Number", messageData.deviceNumber);
+	console.log("Device Serial:", messageData.deviceSerial);
 }
 
 client.on("error", function (err) {
@@ -29,9 +54,9 @@ client.on("listening", function () {
 		var magicByte = msg[0];
 		if (magicByte === rfidReader.commands.dataReceived1 || magicByte == rfidReader.commands.dataReceived2)
 		{
-			rfidReader.processBindingData(msg);
+			processBindingData(msg);
 		} else if (magicByte == rfidReader.commands.deviceDiscovery) {
-			rfidReader.registerDevice(msg);
+			registerDevice(msg);
 		} else {
 			console.log("Server got: " + JSON.stringify(msg.toJSON()) + " from " + rinfo.address + ":" + rinfo.port);
 		}		

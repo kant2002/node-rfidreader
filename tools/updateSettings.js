@@ -21,7 +21,7 @@ client.on("listening", function () {
   	console.log("Server listening " + address.address + ":" + address.port);
 	console.log("Start listening.")
     client.setBroadcast(true);
-	var setSound = rfidReader.updateReaderCommand("192.168.1.217", "255.255.255.0", "192.168.1.100", 0, "199-1-112-40", 0);
+	var setSound = rfidReader.updateReaderCommand("192.168.1.217", "255.255.255.0", "192.168.1.100", 0, "199-1-112-40", 1);
 	client.send(setSound, 0, setSound.length, deviceBroadcastPort, broadcastAddress, failOnError);
 });
 

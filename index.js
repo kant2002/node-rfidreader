@@ -10,9 +10,10 @@ var commands = {
 	dataReceived1: 0xC1,
 	dataReceived2: 0xD1,
 	reply: 0x69,
-	deviceDiscovery: 0xF1,
 	writeCardSuspected: 0x5A,
 	updateReader: 0xF0,
+	deviceDiscovery: 0xF1,
+	deviceBooted: 0xF2,
 }
 
 var soundType = {
@@ -135,36 +136,10 @@ function decodeRegisterDeviceMessage(msg) {
 	}
 }
 
-function processBindingData(msg) {
-	var reply = createReply(msg);	
-	var messageData = decodeCardMessage(msg);
-	console.log("Reader IP string", messageData.readerIpAddress);
-	console.log("Device Number", messageData.deviceNumber);
-	console.log("Packet No:", messageData.packetNumber);
-	console.log("Card Number", messageData.cardNumber);
-
-	console.log("Sending reply", reply);
-	//client.setBroadcast(false);
-	client.send(reply, 0, reply.length, deviceBroadcastPort, messageData.readerIpAddress, function(err, bytes) {
-		//client.setBroadcast(true);
-	});
-}
-
-function registerDevice(msg) {
-	var messageData = decodeRegisterDeviceMessage(msg);
-	console.log("Reader IP address:", messageData.readerIpAddress);
-	console.log("Reader IP mask:", messageData.readerIpAddressMask);
-	console.log("Reader IP gateway:", messageData.readerIpAddressGateway);
-	console.log("Device Number", messageData.deviceNumber);
-	console.log("Device Serial:", messageData.deviceSerial);
-}
-
 module.exports = {
 	commands: commands,
 	createReply: createReply,
 	createDiscoveryCommand: createDiscoveryCommand,
-	processBindingData: processBindingData,
-	registerDevice: registerDevice,
 	soundType: soundType,
 	setSoundCommand: setSoundCommand,
 	updateReaderCommand: updateReaderCommand,
