@@ -1,6 +1,6 @@
 {
   "name": "rfidreader",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "RFID reader library for communication with readers uing Ethernet",
   "main": "index.js",
   "scripts": {
