@@ -96,8 +96,8 @@ function decodeCardMessage(msg) {
 	var deviceNumber = msg.readUInt16LE(5);
 	var packetNumber = msg.readUInt16LE(7);
 	
-	var cardNumber = msg.readUInt32LE(9);
-	var cardNumberString = "000000000" + cardNumber;
+	var cardNumber = msg.readUInt32LE(10);
+	var cardNumberString = "000000000" + cardNumber.toString();
 	cardNumberString = cardNumberString.substr(cardNumberString.length - 10, 10);
 
 	return {
