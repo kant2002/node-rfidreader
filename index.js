@@ -5,15 +5,30 @@ var broadcastAddress = "255.255.255.255";
 var deviceBroadcastPort = 39169;
 
 var commands = {
-	deviceDescovery: 0xA5,
-	setSound: 0x96,
-	dataReceived1: 0xC1,
-	dataReceived2: 0xD1,
 	reply: 0x69,
-	writeCardSuspected: 0x5A,
+	
+    setSound: 0x96,
+	deviceDescovery: 0xA5,
+    resetToFactory: 0xA6, // Back reader connection cross gateway parameters
+    dataReceived1: 0xC1,
+	dataReceived2: 0xD1,
+	setTargetComputerIp: 0xE1,  // 
 	updateReader: 0xF0,
 	deviceDiscovery: 0xF1,
 	deviceBooted: 0xF2,
+    
+    unknownCommand1: 0x78, // Open relay. Drive relay
+	unknownCommand2: 0xE8,
+	unknownCommand3: 0x3C, // Write meat sector capacity
+	unknownCommand4: 0xF9, // Change with a new directive
+	unknownCommand5: 0x5A, // display sent to the reader double line of the display
+	unknownCommand6: 0x4B, // Set the area code and area code reader
+                           // Since the area code, and set the same password command, 
+                           // there is a conflict, only for pre-2013 version of the four lines read only reader
+	unknownCommand7: 0x1E, // Text set power and standby display
+    unknownCommand8: 0xD2, // Time reading device
+    unknownCommand9: 0xC3, // Set device time
+    deviceReturnTimeInformation: 0xF8, // Set device time
 }
 
 var soundType = {
@@ -119,6 +134,12 @@ function createReply(msg) {
 	return reply;
 }
 
+function createResetToFactory() {
+	var reply = new Buffer(1);
+	reply[0] = commands.resetToFactory;	
+	return reply;
+}
+
 function decodeRegisterDeviceMessage(msg) {
 	
 	var readerIpAddressString = readIpAddress(msg, 1);
@@ -139,6 +160,7 @@ function decodeRegisterDeviceMessage(msg) {
 module.exports = {
 	commands: commands,
 	createReply: createReply,
+    createResetToFactory: createResetToFactory,
 	createDiscoveryCommand: createDiscoveryCommand,
 	soundType: soundType,
 	decodeRegisterDeviceMessage: decodeRegisterDeviceMessage,

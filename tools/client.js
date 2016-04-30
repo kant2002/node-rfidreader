@@ -52,6 +52,7 @@ client.on("listening", function () {
 	client.send(message, 0, message.length, deviceBroadcastPort, broadcastAddress, failOnError);	
 	client.on("message", function (msg, rinfo) {
 		var magicByte = msg[0];
+		console.log("Server got: " + JSON.stringify(msg.toJSON()) + " from " + rinfo.address + ":" + rinfo.port);
 		if (magicByte === rfidReader.commands.dataReceived1 || magicByte == rfidReader.commands.dataReceived2)
 		{
 			processBindingData(msg);
@@ -65,5 +66,5 @@ client.on("listening", function () {
 
 client.bind({
 	port: deviceBroadcastPort,
-	address: "169.254.167.154"
+	address: process.argv.length > 2 ? process.argv[2] : "169.254.167.154"
 });

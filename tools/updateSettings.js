@@ -17,8 +17,8 @@ client.on("error", function (err) {
 });
 
 //var deviceIpMask = "255.255.255.0";
-//var deviceIpMask = "255.255.240.0";
-var deviceMask = "255.255.254.0";
+var deviceIpMask = "255.255.240.0";
+//var deviceMask = "255.255.254.0";
 var data = [
 {
 	ip: "192.168.1.218",
@@ -101,6 +101,18 @@ var data = [
 	ip: "10.240.66.21",
 	gateway: "10.240.66.1",
 	serial: "141-1-33-202"
+},
+// 13
+{
+	ip: "10.240.66.22",
+	gateway: "10.240.66.1",
+	serial: "199-1-112-40"
+},
+// 14
+{
+	ip: "10.240.66.23",
+	gateway: "10.240.66.1",
+	serial: "144-1-31-95"
 }
 ];
 
@@ -111,7 +123,7 @@ client.on("listening", function () {
     client.setBroadcast(true);
 	var setSound = rfidReader.setSoundCommand(0, rfidReader.soundType.shortBeepOnce);
 	client.send(setSound, 0, setSound.length, deviceBroadcastPort, broadcastAddress, failOnError);
-	var deviceData = data[13];
+	var deviceData = data[10];
 	var updateReaderCommand = rfidReader.updateReaderCommand(deviceData.ip, deviceIpMask, deviceData.gateway, 0, deviceData.serial, 1);
 	client.send(updateReaderCommand, 0, updateReaderCommand.length, deviceBroadcastPort, broadcastAddress, function (err) {
 		console.log(arguments);
